@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ምልከት ፊደላት - mastering Geez Fidelat</title>
+  <title>ምልከት ፊደላት</title>
   <style>
     :root {
       --sky1: #8fdcff;
@@ -455,6 +455,15 @@
       filter: drop-shadow(0 4px 10px rgba(255, 204, 51, 0.35));
     }
 
+    .confetti-piece {
+      position: absolute;
+      width: 14px;
+      height: 20px;
+      border-radius: 4px;
+      animation: confettiFall 2.4s ease-out forwards;
+      opacity: 0;
+    }
+
     @keyframes burstUp {
       0% {
         transform: translateY(20px) scale(0.5) rotate(0deg);
@@ -471,6 +480,22 @@
 
     @keyframes popIn {
       0% { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(-30px) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(320px) rotate(540deg);
+        opacity: 0;
+      }
+    }
       100% { transform: scale(1); opacity: 1; }
     }
 
@@ -587,7 +612,7 @@
     <section class="top-grid">
       <div class="card hero-copy">
         <div class="badge">🌈 Listen • Match • Unlock</div>
-        <h1>ምልከት ፊደላት - mastering Geez fidelat</h1>
+        <h1>ምልከት ፊደላት</h1>
         <p class="subtitle">
           Start with the main letters (ግእዝ). After mastering ግእዝ, the second variant (ካዕብ) will be activated. And then the third (ሣልስ), etc.
         </p>
@@ -805,6 +830,18 @@
         star.style.fontSize = (1.2 + Math.random() * 1.2) + 'rem';
         starsLayer.appendChild(star);
       }
+
+      const confettiColors = ['#ff6b6b', '#ffd93d', '#6bcB77', '#4d96ff', '#c77dff', '#ff8fab'];
+      for (let i = 0; i < 24; i += 1) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = (4 + Math.random() * 92) + '%';
+        piece.style.top = (-10 - Math.random() * 25) + 'px';
+        piece.style.background = confettiColors[i % confettiColors.length];
+        piece.style.animationDelay = (Math.random() * 0.35) + 's';
+        piece.style.transform = 'rotate(' + Math.round(Math.random() * 180) + 'deg)';
+        starsLayer.appendChild(piece);
+      }
     }
 
     function showCelebration(title, text, options = {}) {
@@ -944,10 +981,10 @@
         helperNoteEl.textContent = 'Amazing! ' + variantNames[currentVariantIndex + 1] + ' is now unlocked because it has playable sounds.';
         messageEl.textContent = 'Fantastic work! You mastered ' + variantNames[currentVariantIndex] + '.';
         showCelebration(
-          'Stage Unlocked!',
-          'You mastered ' + variantNames[currentVariantIndex] + '. ' + variantNames[currentVariantIndex + 1] + ' is ready for you now.',
+          '🎉 Level Complete! 🎉',
+          'Amazing work! You mastered ' + variantNames[currentVariantIndex] + '. ' + variantNames[currentVariantIndex + 1] + ' is now unlocked.',
           {
-            badge: '🎉 New Stage!',
+            badge: '🌟 Hooray! 🌟',
             continueLabel: 'Stay Here',
             nextLabel: 'Open ' + variantNames[currentVariantIndex + 1]
           }
@@ -1069,8 +1106,8 @@
 
     celebrationNextBtn.addEventListener('click', () => {
       hideCelebration();
-      messageEl.textContent = 'Great work! More stages can be shown later.';
-      helperNoteEl.textContent = 'For now, the screen stays focused on ግእዝ to keep things simple.';
+      messageEl.textContent = '🎉 Fantastic! A new level has unlocked.';
+      helperNoteEl.textContent = 'More stages can be shown later. For now, the screen stays focused on ግእዝ to keep things simple.';
     });
 
     replayBtn.addEventListener('click', () => {
