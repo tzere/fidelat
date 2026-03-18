@@ -273,8 +273,8 @@
     }
 
     .sound-btn {
-      background: linear-gradient(135deg, #ffcf34, #ffb020);
-      color: #4a3800;
+      background: linear-gradient(135deg, #27c6ff, #1c8ef5);
+      color: white;
     }
 
     .helper-note {
@@ -646,9 +646,9 @@
 
         <div class="variant-grid" id="variantGrid"></div>
         <div class="letter-grid" id="letterGrid"></div>
-        <details class="card" style="margin-top:16px;padding:14px 16px;background:rgba(255,255,255,0.7);">
-          <summary style="cursor:pointer;font-weight:900;color:#6d5200;">Confusing letters / ዝያዳ ምስምሳል ዘለዎም ፊደላት</summary>
-          <div class="mini-note" style="margin-top:10px;">A small extra set for easily confused letters.</div>
+        <details class="card" style="margin-top:16px;padding:14px 16px;background:rgba(255,255,255,0.7);" open>
+          <summary style="cursor:pointer;font-weight:900;color:#6d5200;">Second letter group / ካልኣይ ጉጅለ ፊደላት</summary>
+          <div class="mini-note" style="margin-top:10px;">A second practice group for the remaining letters.</div>
           <div class="letter-grid" id="letterGrid2" style="margin-top:12px;"></div>
         </details>
         <div class="mini-note" id="activeVariantNote">Active stage: ግእዝ</div>
@@ -674,7 +674,13 @@
       ['አ','ኡ','ኢ','ኣ','ኤ','እ','ኦ'],
       ['ከ','ኩ','ኪ','ካ','ኬ','ክ','ኮ'],
       ['ወ','ዉ','ዊ','ዋ','ዌ','ው','ዎ'],
-      ['ዐ','ዑ','ዒ','ዓ','ዔ','ዕ','ዖ'],
+      ['ዐ','ዑ','ዒ','ዓ','ዔ','ዕ','ዖ']
+    ];
+
+    const baseRows2 = [
+      ['ሰ','ሱ','ሲ','ሳ','ሴ','ስ','ሶ'],
+      ['ኀ','ኁ','ኂ','ኃ','ኄ','ኅ','ኆ'],
+      ['ፀ','ፁ','ፂ','ፃ','ፄ','ፅ','ፆ'],
       ['ዘ','ዙ','ዚ','ዛ','ዜ','ዝ','ዞ'],
       ['ዠ','ዡ','ዢ','ዣ','ዤ','ዥ','ዦ'],
       ['የ','ዩ','ዪ','ያ','ዬ','ይ','ዮ'],
@@ -687,12 +693,6 @@
       ['ጸ','ጹ','ጺ','ጻ','ጼ','ጽ','ጾ'],
       ['ፈ','ፉ','ፊ','ፋ','ፌ','ፍ','ፎ'],
       ['ፐ','ፑ','ፒ','ፓ','ፔ','ፕ','ፖ']
-    ];
-
-    const baseRows2 = [
-      ['ሰ','ሱ','ሲ','ሳ','ሴ','ስ','ሶ'],
-      ['ኀ','ኁ','ኂ','ኃ','ኄ','ኅ','ኆ'],
-      ['ፀ','ፁ','ፂ','ፃ','ፄ','ፅ','ፆ']
     ];
 
     const variantNames = ['ግእዝ', 'ካዕብ', 'ሣልስ', 'ራብዕ', 'ኀምስ', 'ሳድስ', 'ሳብዕ'];
@@ -1017,7 +1017,6 @@
         buildVariantButtons();
         buildLetterButtons();
         buildConfusingLetterButtons();
-        updateStageNote();erButtons();
         updateStageNote();
         updateStats();
 
@@ -1035,6 +1034,7 @@
         activeSymbols = getPlayableSymbolsForVariant(currentVariantIndex);
         buildVariantButtons();
         buildLetterButtons();
+        buildConfusingLetterButtons();
         updateStageNote();
         messageEl.textContent = 'The page could not load sounds.json.';
         helperNoteEl.textContent = 'On GitHub Pages, keep sounds.json beside this HTML file and make sure the JSON contains real .mp3 audio paths.';
@@ -1069,7 +1069,7 @@
 
     replayBtn.addEventListener('click', () => {
       if (!target) {
-        messageEl.textContent = 'Tap Start / ንስማዕ on the welcome screen to begin.';
+        pickRandomTarget();
         return;
       }
       playSound(target);
