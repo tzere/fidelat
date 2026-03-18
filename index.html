@@ -857,43 +857,30 @@
     }
 
     function buildVariantButtons() {
-      variantGrid.style.display = 'grid';
-      variantGrid.style.gridTemplateColumns = 'repeat(2, minmax(100px, 1fr))';
-      variantGrid.style.maxWidth = '240px';
-      variantGrid.style.gap = '10px';
-      variantGrid.innerHTML = `
-        <button class="variant-btn ${currentTab === 1 ? 'active' : ''}" id="firstPaneToggle" type="button" aria-label="First group">ግእዝ (1)</button>
-        <button class="variant-btn ${currentTab === 2 ? 'active' : ''}" id="secondPaneToggle" type="button" aria-label="Second group">ግእዝ (2)</button>
-      `;
+	  variantGrid.innerHTML = `
+		<button class="variant-btn ${currentTab === 1 ? 'active' : ''}" id="firstPaneToggle" type="button">ግእዝ (1)</button>
+		<button class="variant-btn ${currentTab === 2 ? 'active' : ''}" id="secondPaneToggle" type="button">ግእዝ (2)</button>
+	  `;
 
-      const firstPaneToggle = document.getElementById('firstPaneToggle');
-      const secondPaneToggle = document.getElementById('secondPaneToggle');
+	  document.getElementById('firstPaneToggle').addEventListener('click', () => {
+		currentTab = 1;
+		letterGrid.style.display = 'grid';
+		letterGrid2.style.display = 'none';
+		buildVariantButtons();
+		updateStageNote();
+	  });
 
-      if (firstPaneToggle) {
-        firstPaneToggle.addEventListener('click', () => {
-          currentTab = 1;
-          letterGrid.style.display = 'grid';
-          if (secondPane) secondPane.style.display = 'none';
-          buildVariantButtons();
-          updateStageNote();
-        });
-      }
+	  document.getElementById('secondPaneToggle').addEventListener('click', () => {
+		currentTab = 2;
+		letterGrid.style.display = 'none';
+		letterGrid2.style.display = 'grid';
+		buildVariantButtons();
+		updateStageNote();
+	  });
 
-      if (secondPaneToggle) {
-        secondPaneToggle.addEventListener('click', () => {
-          currentTab = 2;
-          letterGrid.style.display = 'none';
-          if (secondPane) secondPane.style.display = 'block';
-          buildVariantButtons();
-          updateStageNote();
-        });
-      }
-
-      if (secondPane) {
-        secondPane.style.display = currentTab === 2 ? 'block' : 'none';
-        letterGrid.style.display = currentTab === 2 ? 'none' : 'grid';
-      }
-    }
+	  letterGrid.style.display = currentTab === 1 ? 'grid' : 'none';
+	  letterGrid2.style.display = currentTab === 2 ? 'grid' : 'none';
+	}
 
     function buildLetterButtons() {
       letterGrid.innerHTML = '';
