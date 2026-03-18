@@ -883,7 +883,8 @@
 
     function buildLetterButtons() {
       letterGrid.innerHTML = '';
-      activeSymbols.forEach(symbol => {
+      const visiblePrimary = activeSymbols.length ? activeSymbols : getVariantSymbols(currentVariantIndex);
+      visiblePrimary.forEach(symbol => {
         const btn = document.createElement('button');
         btn.className = 'letter-btn';
         btn.type = 'button';
@@ -892,18 +893,21 @@
         btn.addEventListener('click', () => handleGuess(symbol, btn));
         letterGrid.appendChild(btn);
       });
-      symbolCountPill.textContent = activeSymbols.length + ' sounds';
+
+      const visibleSecondary = secondarySymbols.length ? secondarySymbols : getVariantSymbols2(currentVariantIndex);
+      const totalVisible = visiblePrimary.length + visibleSecondary.length;
+      symbolCountPill.textContent = totalVisible + ' letters';
     }
 
     function buildConfusingLetterButtons() {
-      const confusingSymbols = baseRows2.flat().filter(symbol => typeof recordedAudio[symbol] === 'string' && recordedAudio[symbol].trim());
       letterGrid2.innerHTML = '';
-      confusingSymbols.forEach(symbol => {
+      const visibleSecondary = secondarySymbols.length ? secondarySymbols : getVariantSymbols2(currentVariantIndex);
+      visibleSecondary.forEach(symbol => {
         const btn = document.createElement('button');
         btn.className = 'letter-btn';
         btn.type = 'button';
         btn.textContent = symbol;
-        btn.setAttribute('aria-label', 'Choose confusing letter ' + symbol);
+        btn.setAttribute('aria-label', 'Choose second group letter ' + symbol);
         btn.addEventListener('click', () => handleGuess(symbol, btn));
         letterGrid2.appendChild(btn);
       });
@@ -934,14 +938,23 @@
     }
 
     function pickRandomTarget() {
-      if (!activeSymbols.length) {
+      const playablePrimary = getPlayableSymbolsForVariant(currentVariantIndex);
+      const playableSecondary = getPlayableSymbolsForVariant2(currentVariantIndex);
+      activeSymbols = playablePrimary;
+      secondarySymbols = playableSecondary;
+
+      if (!playablePrimary.length && !playableSecondary.length) {
         target = null;
         messageEl.textContent = 'This stage has no playable sounds yet.';
         helperNoteEl.textContent = 'Add one or more .mp3 audio files for this stage to make it playable.';
         return;
       }
       clearLetterStates();
-      target = chooseRandomUnmasteredOrAny();
+      const mastered = masterySets[currentVariantIndex];
+      const combined = [...playablePrimary, ...playableSecondary];
+      const remaining = combined.filter(symbol => !mastered.has(symbol));
+      const pool = remaining.length ? remaining : combined;
+      target = pool[Math.floor(Math.random() * pool.length)];
       gameStarted = true;
       messageEl.textContent = 'Listen carefully and tap the matching letter.';
       helperNoteEl.textContent = 'You can tap “Hear Again” to listen one more time.';
