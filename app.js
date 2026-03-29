@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'geez-fidelat-progress-v3';
+const STORAGE_KEY = 'geez-fidelat-progress-v6';
 
 const variantNames = ['ግእዝ', 'ካዕብ', 'ሣልስ', 'ራብዕ', 'ኀምስ', 'ሳድስ', 'ሳብዕ'];
 
@@ -53,7 +53,6 @@ let celebration = null;
 const introOverlay = document.getElementById('introOverlay');
 const enterGameBtn = document.getElementById('enterGameBtn');
 const continueBtn = document.getElementById('continueBtn');
-const restartIntroBtn = document.getElementById('restartIntroBtn');
 
 const scoreEl = document.getElementById('score');
 const roundsEl = document.getElementById('rounds');
@@ -62,12 +61,12 @@ const unlockedCountEl = document.getElementById('unlockedCount');
 const messageEl = document.getElementById('message');
 const helperNoteEl = document.getElementById('helperNote');
 const variantGrid = document.getElementById('variantGrid');
-const partGrid = document.getElementById('partGrid');
 const letterGrid = document.getElementById('letterGrid');
 const activeVariantNote = document.getElementById('activeVariantNote');
 const symbolCountPill = document.getElementById('symbolCountPill');
 const replayBtn = document.getElementById('replayBtn');
 const resetBtn = document.getElementById('resetBtn');
+const dangerZone = document.getElementById('dangerZone');
 
 const soundReveal = document.getElementById('soundReveal');
 const soundRevealText = document.getElementById('soundRevealText');
@@ -79,8 +78,8 @@ const celebrationOverlay = document.getElementById('celebrationOverlay');
 const celebrationBadge = document.getElementById('celebrationBadge');
 const celebrationTitle = document.getElementById('celebrationTitle');
 const celebrationText = document.getElementById('celebrationText');
+const celebrationWord = document.getElementById('celebrationWord');
 const celebrationContinueBtn = document.getElementById('celebrationContinueBtn');
-const celebrationNextBtn = document.getElementById('celebrationNextBtn');
 const starsLayer = document.getElementById('starsLayer');
 
 function getSymbolsFor(variantIndex, part) {
@@ -94,10 +93,6 @@ function getMasteryFor(variantIndex, part) {
 
 function visibleLetters() {
   return getSymbolsFor(currentVariant, currentPart);
-}
-
-function activeMastery() {
-  return getMasteryFor(currentVariant, currentPart);
 }
 
 function activePlayable() {
@@ -141,6 +136,11 @@ function updateContinueButton() {
   continueBtn.style.display = hasSavedProgress() ? 'inline-flex' : 'none';
 }
 
+function updateDangerZoneVisibility() {
+  const shouldShow = getHighestUnlockedVariant() > 0 || currentVariant > 0;
+  dangerZone.style.display = shouldShow ? 'block' : 'none';
+}
+
 function updateStats() {
   scoreEl.textContent = score;
   roundsEl.textContent = rounds;
@@ -151,8 +151,12 @@ function updateStats() {
 
 function updateStageNote() {
   activeVariantNote.textContent =
-    'Active stage: ' + variantNames[currentVariant] + ' — Part ' + currentPart +
-    '. Mastered ' + activeMastery().length + ' of ' + visibleLetters().length + ' letters.';
+    'Active stage: ' + variantNames[currentVariant] +
+    '. Mastered ' +
+    (mastery[currentVariant].part1.length + mastery[currentVariant].part2.length) +
+    ' of ' +
+    (getSymbolsFor(currentVariant, 1).length + getSymbolsFor(currentVariant, 2).length) +
+    ' letters.';
   symbolCountPill.textContent = visibleLetters().length + ' letters';
 }
 
@@ -187,7 +191,6 @@ function setRevealState(mode, label) {
 
 function setReplayButtonState(mode) {
   replayBtn.classList.remove('ready', 'attention');
-
   if (mode === 'ready') replayBtn.classList.add('ready');
   if (mode === 'attention') replayBtn.classList.add('ready', 'attention');
 }
@@ -265,6 +268,22 @@ function playSound(symbol) {
   });
 }
 
+function playVariantUnlockSound() {
+  try {
+    const audio = new Audio('audio/variant-unlock.mp3');
+    currentAudio = audio;
+    audio.play().catch(() => {});
+  } catch (e) {}
+}
+
+function playFinalCelebrationSound() {
+  try {
+    const audio = new Audio('audio/final-celebration.mp3');
+    currentAudio = audio;
+    audio.play().catch(() => {});
+  } catch (e) {}
+}
+
 function launchStars() {
   starsLayer.innerHTML = '';
   const icons = ['⭐', '🌟', '✨', '🎉'];
@@ -299,20 +318,31 @@ function showCelebration(data) {
   celebrationText.textContent = data.text;
   celebrationContinueBtn.textContent = data.continueLabel;
 
-  celebrationNextBtn.style.display = 'none';
+  if (data.word) {
+    celebrationWord.style.display = 'block';
+    celebrationWord.textContent = data.word;
+  } else {
+    celebrationWord.style.display = 'none';
+    celebrationWord.textContent = '';
+  }
 
   setMessageTone('celebrate');
   setRevealState('idle', 'Celebration!');
   setReplayButtonState('ready');
   celebrationOverlay.style.display = 'flex';
   launchStars();
-  speakCelebration(data.voiceText || data.title);
+
+  if (!data.useOnlyAudioFile) {
+    speakCelebration(data.voiceText || data.title);
+  }
 }
 
 function hideCelebration() {
   celebration = null;
   celebrationOverlay.style.display = 'none';
   starsLayer.innerHTML = '';
+  celebrationWord.style.display = 'none';
+  celebrationWord.textContent = '';
 }
 
 function buildVariantButtons() {
@@ -322,8 +352,8 @@ function buildVariantButtons() {
   visibleIndexes.forEach((variantIndex) => {
     const btn = document.createElement('button');
     btn.className = 'variant-btn';
-    if (variantIndex === currentVariant) btn.classList.add('active');
     if (isVariantComplete(variantIndex)) btn.classList.add('complete');
+    if (variantIndex === currentVariant) btn.classList.add('active');
     btn.type = 'button';
     btn.textContent = variantNames[variantIndex];
     btn.addEventListener('click', () => {
@@ -338,41 +368,6 @@ function buildVariantButtons() {
     });
     variantGrid.appendChild(btn);
   });
-}
-
-function buildPartButtons() {
-  partGrid.innerHTML = '';
-
-  const p1 = document.createElement('button');
-  p1.className = 'part-btn' + (currentPart === 1 ? ' active' : '');
-  p1.type = 'button';
-  p1.textContent = 'Part 1';
-  p1.addEventListener('click', () => {
-    currentPart = 1;
-    gameStarted = false;
-    target = null;
-    render();
-    messageEl.textContent = 'Opened part 1.';
-    helperNoteEl.textContent = 'A sound will play now.';
-    setTimeout(() => chooseAndPlayNext(currentVariant, 1), 80);
-  });
-
-  const p2 = document.createElement('button');
-  p2.className = 'part-btn' + (currentPart === 2 ? ' active' : '');
-  p2.type = 'button';
-  p2.textContent = 'Part 2';
-  p2.addEventListener('click', () => {
-    currentPart = 2;
-    gameStarted = false;
-    target = null;
-    render();
-    messageEl.textContent = 'Opened part 2.';
-    helperNoteEl.textContent = 'A sound will play now.';
-    setTimeout(() => chooseAndPlayNext(currentVariant, 2), 80);
-  });
-
-  partGrid.appendChild(p1);
-  partGrid.appendChild(p2);
 }
 
 function buildLetterButtons() {
@@ -395,10 +390,10 @@ function clearLetterStates() {
 
 function render() {
   buildVariantButtons();
-  buildPartButtons();
   buildLetterButtons();
   updateStats();
   updateStageNote();
+  updateDangerZoneVisibility();
 }
 
 function chooseAndPlayNext(variantIndex = currentVariant, part = currentPart) {
@@ -412,8 +407,8 @@ function chooseAndPlayNext(variantIndex = currentVariant, part = currentPart) {
     setMessageTone('error');
     setRevealState('idle', 'No sound');
     setReplayButtonState('ready');
-    messageEl.textContent = 'This part has no playable sounds yet.';
-    helperNoteEl.textContent = 'Add audio files for this part, then press Start / Hear Again.';
+    messageEl.textContent = 'This stage has no playable sounds yet.';
+    helperNoteEl.textContent = 'Add audio files for this stage, then press Play / ንስማዕ.';
     return;
   }
 
@@ -433,7 +428,7 @@ function chooseAndPlayNext(variantIndex = currentVariant, part = currentPart) {
 
   setTimeout(() => {
     playSound(target);
-    setRevealState('idle', 'Listen now');
+    setRevealState('idle', 'Listen again');
     setReplayButtonState('ready');
     setMessageTone('info');
     messageEl.textContent = 'Now tap the matching letter.';
@@ -471,14 +466,14 @@ async function loadSounds() {
 
 function handleGuess(symbol, button) {
   if (!gameStarted || !target) {
-    messageEl.textContent = 'Tap Start / Hear Again to begin.';
+    messageEl.textContent = 'Tap Play / ንስማዕ to begin.';
     return;
   }
 
   if (!activePlayable().includes(symbol)) {
     setMessageTone('error');
     messageEl.textContent = 'This letter does not have a recorded sound yet.';
-    helperNoteEl.textContent = 'Use letters with audio in the open part, or add the missing sound file.';
+    helperNoteEl.textContent = 'Use letters with audio in the open stage, or add the missing sound file.';
     return;
   }
 
@@ -506,45 +501,53 @@ function handleGuess(symbol, button) {
       target = null;
 
       if (currentPart === 1) {
-        showPartFinishedBanner('✅ Part 1 complete!');
-        showCelebration({
-          title: '🎉 Part 1 Complete! 🎉',
-          text: 'Wonderful! You finished part 1 of ' + variantNames[currentVariant] + '. Now let us practice part 2.',
-          badge: '🌟 Great Job! 🌟',
-          continueLabel: 'Open Part 2',
-          action: 'next-part',
-          final: false,
-          voiceText: 'Great job! Part one is complete.'
-        });
+        currentPart = 2;
+        render();
+        saveProgress();
+        setMessageTone('success');
+        setRevealState('idle', 'Next set');
+        messageEl.textContent = 'Great! Here comes the next set.';
+        helperNoteEl.textContent = 'Listen for the next sound.';
+        setTimeout(() => chooseAndPlayNext(currentVariant, 2), 500);
         return;
       }
 
       const variantDone = isVariantComplete(currentVariant);
       if (variantDone && currentVariant < variantNames.length - 1) {
-        showPartFinishedBanner('🌟 Variant complete!');
+        showPartFinishedBanner('ሀብሮም! ዕልልልል!');
         showCelebration({
-          title: '🎉 Variant Complete! 🎉',
-          text: 'Wonderful! You mastered ' + variantNames[currentVariant] + '. ' + variantNames[currentVariant + 1] + ' is now unlocked.',
-          badge: '🌟 New Variant! 🌟',
-          continueLabel: 'Open ' + variantNames[currentVariant + 1],
+          title: 'ዕልልልል!',
+          text: 'ሀብሮም! ' + variantNames[currentVariant + 1] + ' is now ready.',
+          badge: '🌟 ሀብሮም! 🌟',
+          continueLabel: 'Play ' + variantNames[currentVariant + 1],
           action: 'next-variant',
           final: false,
-          voiceText: 'Wonderful! A new variant is unlocked.'
+          voiceText: 'ሀብሮም!',
+          word: 'ሀብሮም! ዕልልልል!',
+          useOnlyAudioFile: true
         });
+        setTimeout(() => {
+          playVariantUnlockSound();
+        }, 150);
         return;
       }
 
       if (variantDone && currentVariant === variantNames.length - 1) {
         showPartFinishedBanner('🏆 All variants complete!');
         showCelebration({
-          title: '🏆 Amazing! You finished all variants! 🏆',
-          text: 'You completed all seven Geez variants. Fantastic work!',
-          badge: '🎊 Superstar! 🎊',
+          title: 'ዕልልልል!',
+          text: 'ሀብሮም! You completed all seven variants.',
+          badge: '🎊 ሀብሮም! 🎊',
           continueLabel: 'Play Again',
           action: 'restart',
           final: true,
-          voiceText: 'Amazing! You finished all variants!'
+          voiceText: 'ሀብሮም!',
+          word: 'ሀብሮም! ዕልልልል!',
+          useOnlyAudioFile: true
         });
+        setTimeout(() => {
+          playFinalCelebrationSound();
+        }, 300);
         return;
       }
     }
@@ -563,7 +566,7 @@ function handleGuess(symbol, button) {
     updateStageNote();
     saveProgress();
     messageEl.textContent = 'Almost! Listen again and try once more.';
-    helperNoteEl.textContent = 'You are still working in ' + variantNames[currentVariant] + ' — Part ' + currentPart + '.';
+    helperNoteEl.textContent = 'You are still working in ' + variantNames[currentVariant] + '.';
     setTimeout(() => playSound(target), 260);
   }
 }
@@ -572,8 +575,8 @@ function handleReplay() {
   if (!activePlayable().length) {
     setMessageTone('error');
     setRevealState('idle', 'No sound');
-    messageEl.textContent = 'This part has no playable sounds yet.';
-    helperNoteEl.textContent = 'Check your audio files for the open part.';
+    messageEl.textContent = 'This stage has no playable sounds yet.';
+    helperNoteEl.textContent = 'Check your audio files for the open stage.';
     return;
   }
 
@@ -596,8 +599,9 @@ function handleReplay() {
 
 function confirmAndReset() {
   const ok = window.confirm('Delete saved progress on this device and start again from ግእዝ?');
-  if (!ok) return;
+  if (!ok) return false;
   resetProgress();
+  return true;
 }
 
 function resetProgress() {
@@ -614,12 +618,13 @@ function resetProgress() {
   } catch (e) {}
   render();
   setMessageTone('info');
-  setRevealState('idle', 'Fresh start');
+  setRevealState('Fresh start', 'Fresh start');
   setReplayButtonState('ready');
   hidePartFinishedBanner();
-  messageEl.textContent = 'Fresh start ready. Tap Start / Hear Again to begin with ግእዝ.';
+  messageEl.textContent = 'Fresh start ready. Tap Play / ንስማዕ to begin with ግእዝ.';
   helperNoteEl.textContent = 'Only ግእዝ is open now.';
   updateContinueButton();
+  updateDangerZoneVisibility();
 }
 
 function loadSavedProgressIntoState() {
@@ -653,23 +658,13 @@ function handleCelebrationContinue() {
   const action = celebration && celebration.action;
   hideCelebration();
 
-  if (action === 'next-part') {
-    currentPart = 2;
-    render();
-    saveProgress();
-    messageEl.textContent = 'Great! Now listen for a sound from ' + variantNames[currentVariant] + ' part 2.';
-    helperNoteEl.textContent = 'You finished part 1. Let us begin part 2.';
-    setTimeout(() => chooseAndPlayNext(currentVariant, 2), 100);
-    return;
-  }
-
   if (action === 'next-variant') {
     currentVariant += 1;
     currentPart = 1;
     render();
     saveProgress();
     messageEl.textContent = 'Great! ' + variantNames[currentVariant] + ' is ready.';
-    helperNoteEl.textContent = 'Let us begin ' + variantNames[currentVariant] + ' — Part 1.';
+    helperNoteEl.textContent = 'Let us begin ' + variantNames[currentVariant] + '.';
     setTimeout(() => chooseAndPlayNext(currentVariant, 1), 100);
     return;
   }
@@ -706,31 +701,28 @@ async function handleContinueStart() {
   setReplayButtonState('ready');
   saveProgress();
   if (ok) {
-    messageEl.textContent = 'Welcome back! Continuing from ' + variantNames[currentVariant] + ' — Part ' + currentPart + '.';
+    messageEl.textContent = 'Welcome back! Continuing from ' + variantNames[currentVariant] + '.';
     helperNoteEl.textContent = 'Your saved progress has been restored.';
     setTimeout(() => chooseAndPlayNext(currentVariant, currentPart), 120);
   }
 }
 
-async function handleFreshStart() {
-  confirmAndReset();
-  if (hasSavedProgress()) return;
-  introOverlay.style.display = 'none';
-  const ok = await loadSounds();
-  render();
-  saveProgress();
-  if (ok) setTimeout(() => chooseAndPlayNext(0, 1), 100);
-}
-
 enterGameBtn.addEventListener('click', handleIntroStart);
 continueBtn.addEventListener('click', handleContinueStart);
-restartIntroBtn.addEventListener('click', handleFreshStart);
 replayBtn.addEventListener('click', handleReplay);
+soundReveal.addEventListener('click', handleReplay);
+soundReveal.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    handleReplay();
+  }
+});
 resetBtn.addEventListener('click', confirmAndReset);
 celebrationContinueBtn.addEventListener('click', handleCelebrationContinue);
 
 render();
 updateContinueButton();
+updateDangerZoneVisibility();
 setMessageTone('info');
 setRevealState('idle', 'Ready');
 setReplayButtonState('ready');

@@ -16,35 +16,17 @@
   </div>
 
   <div class="intro-overlay" id="introOverlay">
-    <div class="card intro-card">
+    <div class="card intro-card intro-card-compact">
       <div class="intro-text">
         <div class="badge">🌟 Welcome . መርሐባ!</div>
         <h1>ምልከት ፊደላት</h1>
         <p>
           Welcome! This app will help you to master the Geez Fidelat.
-          You can continue from where you left off, review completed variants,
-          or start again from ግእዝ.
         </p>
         <div class="intro-actions">
-          <button class="start-big" id="enterGameBtn" type="button">🎉 Start / ንስማዕ</button>
+          <button class="start-big" id="enterGameBtn" type="button">🎉 Play / ንስማዕ</button>
           <button class="continue-big" id="continueBtn" type="button" style="display:none;">▶ Continue</button>
-          <button class="restart-big" id="restartIntroBtn" type="button">New Learner - ካብ ፈለማ</button>
         </div>
-      </div>
-      <div class="intro-art" aria-hidden="true">
-        <svg viewBox="0 0 540 320" role="img">
-          <circle cx="456" cy="60" r="28" fill="#ffd95e" />
-          <ellipse cx="120" cy="250" rx="90" ry="30" fill="#9de37b" />
-          <ellipse cx="280" cy="262" rx="110" ry="36" fill="#94db74" />
-          <ellipse cx="442" cy="252" rx="88" ry="30" fill="#86d667" />
-          <g transform="translate(220 70)">
-            <circle cx="48" cy="44" r="30" fill="#6f452d" />
-            <rect x="16" y="74" width="64" height="70" rx="20" fill="#ffcf66" />
-            <circle cx="48" cy="42" r="19" fill="#8d5b3d" />
-            <rect x="91" y="70" width="78" height="58" rx="12" fill="#ffffff" stroke="#60a5fa" stroke-width="4" />
-            <text x="130" y="106" font-size="26" text-anchor="middle" fill="#1d4ed8" font-weight="900">ሀ ሁ</text>
-          </g>
-        </svg>
       </div>
     </div>
   </div>
@@ -55,9 +37,9 @@
       <div class="badge" id="celebrationBadge">⭐ Great Job!</div>
       <h2 id="celebrationTitle">You did it!</h2>
       <p id="celebrationText">Great work.</p>
+      <div class="celebration-word" id="celebrationWord" style="display:none;"></div>
       <div class="celebration-actions">
         <button class="celebration-btn celebration-primary" id="celebrationContinueBtn" type="button">Continue</button>
-        <button class="celebration-btn celebration-secondary" id="celebrationNextBtn" type="button" style="display:none;">Next</button>
       </div>
     </div>
   </div>
@@ -69,10 +51,22 @@
         <h1>ምልከት ፊደላት</h1>
         <p class="subtitle">Practice all seven variants. Completed variants stay open for review.</p>
         <div class="stats" aria-label="Game statistics">
-          <div class="stat"><div class="stat-label">Score</div><div class="stat-value" id="score">0</div></div>
-          <div class="stat"><div class="stat-label">Rounds</div><div class="stat-value" id="rounds">0</div></div>
-          <div class="stat"><div class="stat-label">Accuracy</div><div class="stat-value" id="accuracy">0%</div></div>
-          <div class="stat"><div class="stat-label">Unlocked</div><div class="stat-value" id="unlockedCount">1/7</div></div>
+          <div class="stat">
+            <div class="stat-label">Score</div>
+            <div class="stat-value" id="score">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Rounds</div>
+            <div class="stat-value" id="rounds">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Accuracy</div>
+            <div class="stat-value" id="accuracy">0%</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Unlocked</div>
+            <div class="stat-value" id="unlockedCount">1/7</div>
+          </div>
         </div>
       </div>
     </section>
@@ -81,16 +75,16 @@
       <div class="card panel">
         <div class="letters-top">
           <div class="left-actions">
-            <button class="action-btn sound-btn" id="replayBtn" type="button">▶ Start / Hear Again</button>
+            <button class="action-btn sound-btn" id="replayBtn" type="button">▶ Play / ንስማዕ</button>
           </div>
-          <h2>Choose the matching letter.</h2>
+          <h2>What did you hear? እንታይ ሰሚዕና?</h2>
           <span class="pill" id="symbolCountPill">0 letters</span>
         </div>
 
         <div class="prompt-card">
           <div class="prompt-top">
             <div class="prompt-title">Current sound</div>
-            <div class="sound-reveal" id="soundReveal">
+            <div class="sound-reveal" id="soundReveal" role="button" tabindex="0" aria-label="Listen again - ድገምያ">
               <span>🔊</span>
               <span id="soundRevealText">Ready</span>
               <span class="sound-dot-wrap" id="soundDots" style="display:none;">
@@ -104,16 +98,15 @@
         </div>
 
         <div class="variant-grid" id="variantGrid"></div>
-        <div class="part-grid" id="partGrid"></div>
         <div class="letter-grid" id="letterGrid"></div>
 
-        <div class="mini-note" id="activeVariantNote">Active stage: ግእዝ — Part 1</div>
-        <div class="helper-note" id="helperNote">Tap Start / Hear Again to begin.</div>
+        <div class="mini-note" id="activeVariantNote">Active stage: ግእዝ</div>
+        <div class="helper-note" id="helperNote">Tap Play / ንስማዕ.</div>
         <div class="message-box info" id="messageBox">
           <div id="message">The first sound will play after you tap Start on the welcome screen.</div>
         </div>
 
-        <details class="danger-zone">
+        <details class="danger-zone" id="dangerZone" style="display:none;">
           <summary>New Learner - ካብ ፈለማ</summary>
           <p>This clears saved progress on this device and starts again from ግእዝ.</p>
           <button class="action-btn reset-btn" id="resetBtn" type="button">Delete saved progress</button>
