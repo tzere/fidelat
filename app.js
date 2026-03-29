@@ -513,13 +513,13 @@ function handleGuess(symbol, button) {
         showPartFinishedBanner('ሀብሮም! ዕልልልል!');
         showCelebration({
           title: 'ዕልልልል!',
-          text: 'ሀብሮም! ' + variantNames[currentVariant + 1] + ' is now ready.',
+          text: variantNames[currentVariant + 1] + ' is now ready.',
           badge: '🌟 ሀብሮም! 🌟',
           continueLabel: 'Play ' + variantNames[currentVariant + 1],
           action: 'next-variant',
           final: false,
           voiceText: 'ሀብሮም!',
-          word: 'ሀብሮም! ዕልልልል!',
+          // word: 'ሀብሮም! ዕልልልል!',
           useOnlyAudioFile: true
         });
         setTimeout(() => {
@@ -538,7 +538,7 @@ function handleGuess(symbol, button) {
           action: 'restart',
           final: true,
           voiceText: 'ሀብሮም!',
-          word: 'ሀብሮም! ዕልልልል!',
+          // word: 'ሀብሮም! ዕልልልል!',
           useOnlyAudioFile: true
         });
         setTimeout(() => {
